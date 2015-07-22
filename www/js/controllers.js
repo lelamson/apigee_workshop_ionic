@@ -8,13 +8,35 @@ angular.module('controllers', [])
   $scope.setSelected = restaurantService.setSelected;
 
   $scope.getRestaurants = function(userLat, userLong) {
-    $http.get('http://localhost:10010/restaurants')
-      .success(function(data, status, headers, config) {
-        console.log('Data: ' + JSON.stringify(data));
-        $scope.restaurants = data.entities;
-        $scope.$broadcast('scroll.refreshComplete');
-        $scope.hideSpinnerClass = "hidden";
+    var posOptions = {
+          timeout: 10000,
+          maximumAge: 30000,
+          enableHighAccuracy: true
+        };
+
+    $cordovaGeolocation.getCurrentPosition(posOptions)
+      .then(function(position) {
+        var userLat = position.coords.latitude;
+        var userLong = position.coords.longitude;
+        console.log('lat', userLat);
+        console.log('long', userLong);
+        restaurantsLookup(userLat, userLong);
+      }, function(error) {
+        console.log('error:', JSON.stringify(error));
+        var userLat = 47.623769;
+        var userLong = -122.336180;
+        restaurantsLookup(userLat, userLong);
       });
+
+    function restaurantsLookup(userLat, userLong) {
+      $http.get('http://grewis-test.apigee.net/api-mobile-app/yelp?ll=' + userLat + ',' + userLong)
+        .success(function(data, status, headers, config) {
+          console.log('Data: ' + JSON.stringify(data));
+          $scope.restaurants = data.entities;
+          $scope.$broadcast('scroll.refreshComplete');
+          $scope.hideSpinnerClass = "hidden";
+        });
+    }
   };
 
   $ionicPlatform.ready(function() {
@@ -81,8 +103,34 @@ angular.module('controllers', [])
   $scope.$on('$ionicView.beforeLeave', function() {
     $rootScope.$broadcast("refreshList");
   }, false);
+})
+
+.controller('FormCtrl', function($scope, $http, $ionicHistory, restaurantService) {
+  $scope.restaurant;
+  $scope.restID;
+
+  $scope.$on('$ionicView.beforeEnter', function() {
+    $scope.restaurant = restaurantService.getSelected();
+    $scope.restID = $scope.restaurant.restID;
+  });
+
+  $scope.createReview = function(review) {
+    var payload = {
+        restID: $scope.restID,
+        title: review.title,
+        reviewer: review.name,
+        rating: +review.rating,
+        body: review.body
+    };
+    $http.post('http://localhost:10010/reviews', payload)
+      .success(function(data, status, headers, config) {
+        review.title = null;
+        review.name = null;
+        review.rating = null;
+        review.body = null;
+        $ionicHistory.goBack();
+      });
+  };
 });
-
-
 
 
