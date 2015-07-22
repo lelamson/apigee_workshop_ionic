@@ -25,17 +25,22 @@ angular.module('RESTaurants', ['ionic', 'controllers', 'services', 'directives',
  // Learn more here: https://github.com/angular-ui/ui-router
  // Set up the various states which the app can be in.
  // Each state's controller can be found in controllers.js
- $stateProvider
+  $stateProvider
 
- .state('list', {
+  .state('list', {
    url: "/",
    templateUrl: 'templates/list.html',
    controller: 'ListCtrl'
- });
+  })
 
- // if none of the above states are matched, use this as the fallback
- $urlRouterProvider.otherwise('/');
+  .state('details', {
+   url: '/details',
+   templateUrl: 'templates/details.html',
+   controller: 'DetailsCtrl'
+  });
 
- $ionicConfigProvider.backButton.previousTitleText(false).text(' ');
+  // if none of the above states are matched, use this as the fallback
+  $urlRouterProvider.otherwise('/');
 
+  $ionicConfigProvider.backButton.previousTitleText(false).text(' ');
 });
